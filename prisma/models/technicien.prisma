@@ -1,0 +1,15 @@
+model Technicien {
+    id                 Int                  @id @default(autoincrement())
+    nom                String
+    id_opr             Int
+    OPR                OPR                  @relation(fields: [id_opr], references: [id])
+    AccompagnementTech AccompagnementTech[]
+}
+
+model AccompagnementTech {
+    id                     Int                    @id @default(autoincrement())
+    id_technicien          Int
+    Technicien             Technicien             @relation(fields: [id_technicien], references: [id])
+    id_type_accompagnement Int
+    TypeAccompagnementTech TypeAccompagnementTech @relation(fields: [id_type_accompagnement], references: [id])
+}

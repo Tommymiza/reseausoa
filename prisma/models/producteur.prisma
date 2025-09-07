@@ -1,0 +1,134 @@
+model Producteur {
+    id                     Int                  @id @default(autoincrement())
+    nom                    String
+    code                   String?
+    prenom                 String?
+    sexe                   Sexe
+    annee_naissance        Int?
+    cin                    String?
+    date_cin               DateTime?
+    niveau_instruction     String?
+    lieu_cin               String?
+    tel1                   String?
+    tel2                   String?
+    date_naissance         DateTime?
+    marie                  Boolean
+    nom_conjoint           String?
+    nb_enfant_a_charge_m   Int?
+    nb_enfant_a_charge_f   Int?
+    nom_chef_famille       String?
+    actif                  Boolean?
+    date_entree_opb        DateTime?
+    Fonction               Fonction[]
+    id_localisation        Int?
+    Localisation           Localisation?        @relation(fields: [id_localisation], references: [id])
+    id_opb                 Int
+    OPB                    OPB                  @relation(fields: [id_opb], references: [id])
+    Production             Production[]
+    AccompagnementProd     AccompagnementProd[]
+    SanteAnimaleProducteur SanteAnimale[]       @relation(name: "SanteAnimaleProducteur")
+    SanteAnimaleVeternaire SanteAnimale[]       @relation(name: "SanteAnimaleVeterinaire")
+    Semence                Semence[]
+    SuiviEvaluation        SuiviEvaluation[]
+    Jeune                  Jeune[]              @relation(name: "JeuneProducteur")
+    JeuneParrain           Jeune[]              @relation(name: "JeuneParrain")
+}
+
+enum Sexe {
+    homme
+    femme
+}
+
+model TypeFonction {
+    id       Int        @id @default(autoincrement())
+    nom      String
+    Fonction Fonction[]
+}
+
+model Fonction {
+    id               Int          @id @default(autoincrement())
+    id_type_fonction Int
+    TypeFonction     TypeFonction @relation(fields: [id_type_fonction], references: [id], onDelete: Restrict)
+    date_debut       DateTime?
+    date_fin         DateTime?
+    id_producteur    Int
+    producteur       Producteur   @relation(fields: [id_producteur], references: [id])
+}
+
+model Production {
+    id                  Int         @id @default(autoincrement())
+    date_production     DateTime
+    date_semis          DateTime?
+    qte_semence_utilise Float?
+    qte_semence_produit Float?
+    qte_decede          Float?
+    qte_produit         Float
+    qte_consomme        Float
+    qte_vendu           Float
+    cout_production     Float
+    ca                  Float
+    date_vente          DateTime
+    observation         String?
+    id_producteur       Int
+    Producteur          Producteur  @relation(fields: [id_producteur], references: [id])
+    id_speculation      Int
+    Speculation         Speculation @relation(fields: [id_speculation], references: [id])
+}
+
+model AccompagnementProd {
+    id                     Int               @id @default(autoincrement())
+    id_producteur          Int
+    Producteur             Producteur        @relation(fields: [id_producteur], references: [id])
+    id_type_accompagnement Int
+    AccompagnementOpr      AccompagnementOpr @relation(fields: [id_type_accompagnement], references: [id])
+}
+
+model SanteAnimale {
+    id                 Int              @id @default(autoincrement())
+    date               DateTime
+    type               TypeSanteAnimale
+    type_animale       String
+    medicament_utilise String?
+    origine_medicament String?
+    lot                String?
+    nb_animaux         Int
+    dose_utilisee      String?
+    pu_dose            Float
+    id_producteur      Int
+    Producteur         Producteur       @relation(fields: [id_producteur], references: [id], name: "SanteAnimaleProducteur")
+    id_opr             Int
+    OPR                OPR              @relation(fields: [id_opr], references: [id])
+    id_veternaire      Int?
+    Veterinaire        Producteur?      @relation(fields: [id_veternaire], references: [id], name: "SanteAnimaleVeterinaire")
+    autre              String?
+}
+
+enum TypeSanteAnimale {
+    Vaccination
+    Soin
+    Déparasitage
+    Vitamine
+}
+
+model Semence {
+    id             Int         @id @default(autoincrement())
+    surface        Float
+    production     Float
+    qte_vendue     Float
+    qte_avarie     Float
+    prix_vente     Float
+    certifiee      Boolean
+    id_producteur  Int
+    Producteur     Producteur  @relation(fields: [id_producteur], references: [id])
+    id_speculation Int
+    Speculation    Speculation @relation(fields: [id_speculation], references: [id])
+}
+
+model SuiviEvaluation {
+    id                Int           @id @default(autoincrement())
+    date              DateTime
+    id_producteur     Int
+    Producteur        Producteur    @relation(fields: [id_producteur], references: [id])
+    id_category_suivi Int
+    CategorySuivi     CategorySuivi @relation(fields: [id_category_suivi], references: [id])
+}

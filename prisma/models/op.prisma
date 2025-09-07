@@ -1,0 +1,170 @@
+model OPR {
+    id                     Int                      @id @default(autoincrement())
+    nom                    String
+    code                   String?
+    lieu_siege             String?
+    recepisse              String?
+    date_recepisse         DateTime?
+    date_creation          DateTime?
+    id_localisation        Int?
+    Localisation           Localisation?            @relation(fields: [id_localisation], references: [id])
+    OPB                    OPB[]
+    Technicien             Technicien[]
+    TypeAccompagnementTech TypeAccompagnementTech[]
+    AccompagnementOpr      AccompagnementOpr[]
+    InformationAgricole    InformationAgricole[]
+    Partenariat            Partenariat[]
+    Commercialisation      Commercialisation[]
+    Achat                  Achat[]
+    Environnementale       Environnementale[]
+    SanteAnimale           SanteAnimale[]
+}
+
+model OPB {
+    id                     Int                      @id @default(autoincrement())
+    nom                    String
+    code                   String?
+    lieu_siege             String?
+    recepisse              String?
+    date_recepisse         DateTime?
+    date_creation          DateTime?
+    date_entree_opr        DateTime?
+    objet_opb              String?
+    recu_opr               String?
+    montant_opr            Float?
+    id_opr                 Int
+    opr                    OPR                      @relation(fields: [id_opr], references: [id])
+    id_localisation        Int?
+    Localisation           Localisation?            @relation(fields: [id_localisation], references: [id])
+    Producteur             Producteur[]
+    InformationAgricoleOPB InformationAgricoleOPB[]
+}
+
+model TypeAccompagnementTech {
+    id                 Int                  @id @default(autoincrement())
+    nom                String
+    date               DateTime
+    id_opr             Int
+    OPR                OPR                  @relation(fields: [id_opr], references: [id])
+    AccompagnementTech AccompagnementTech[]
+}
+
+model AccompagnementOpr {
+    id                      Int                  @id @default(autoincrement())
+    date                    DateTime
+    ancien_id               Int
+    duree                   Int?
+    existant                String?
+    problematique           String?
+    solution                String?
+    remarque                String?
+    id_theme_accompagnement Int?
+    ThemeAccompagnement     ThemeAccompagnement? @relation(fields: [id_theme_accompagnement], references: [id])
+    id_opr                  Int
+    OPR                     OPR                  @relation(fields: [id_opr], references: [id])
+    AccompagnementProd      AccompagnementProd[]
+}
+
+model CategoryThemeAccompagnement {
+    id                  Int                   @id @default(autoincrement())
+    nom                 String
+    type                TypeAccompagnement
+    ThemeAccompagnement ThemeAccompagnement[]
+}
+
+model ThemeAccompagnement {
+    id                               Int                         @id @default(autoincrement())
+    nom                              String
+    id_category_theme_accompagnement Int
+    CategoryThemeAccompagnement      CategoryThemeAccompagnement @relation(fields: [id_category_theme_accompagnement], references: [id])
+    AccompagnementOpr                AccompagnementOpr[]
+}
+
+enum TypeAccompagnement {
+    Accompagnement
+    VE
+    Formation
+}
+
+model InformationAgricole {
+    id                     Int                      @id @default(autoincrement())
+    date                   DateTime
+    id_opr                 Int
+    OPR                    OPR                      @relation(fields: [id_opr], references: [id])
+    type_information       String
+    source                 String?
+    explication            String?
+    InformationAgricoleOPB InformationAgricoleOPB[]
+}
+
+model InformationAgricoleOPB {
+    id                      Int                 @id @default(autoincrement())
+    id_opb                  Int
+    OPB                     OPB                 @relation(fields: [id_opb], references: [id])
+    id_information_agricole Int
+    InformationAgricole     InformationAgricole @relation(fields: [id_information_agricole], references: [id])
+}
+
+model Partenariat {
+    id         Int       @id @default(autoincrement())
+    nom        String
+    technique  Boolean
+    formel     Boolean
+    financier  Boolean
+    date_debut DateTime
+    date_fin   DateTime?
+    id_opr     Int
+    OPR        OPR       @relation(fields: [id_opr], references: [id])
+}
+
+model Commercialisation {
+    id               Int                @id @default(autoincrement())
+    date             DateTime
+    id_opr           Int
+    OPR              OPR                @relation(fields: [id_opr], references: [id])
+    partenaire       String
+    VenteSpeculation VenteSpeculation[]
+}
+
+model VenteSpeculation {
+    id                   Int               @id @default(autoincrement())
+    quantite             Float
+    id_speculation       Int
+    Speculation          Speculation       @relation(fields: [id_speculation], references: [id])
+    id_commercialisation Int
+    Commercialisation    Commercialisation @relation(fields: [id_commercialisation], references: [id])
+}
+
+model Achat {
+    id           Int            @id @default(autoincrement())
+    date         DateTime
+    id_opr       Int
+    OPR          OPR            @relation(fields: [id_opr], references: [id])
+    partenaire   String
+    AchatArticle AchatArticle[]
+}
+
+model AchatArticle {
+    id         Int     @id @default(autoincrement())
+    quantite   Float
+    id_article Int
+    Article    Article @relation(fields: [id_article], references: [id])
+    id_achat   Int
+    Achat      Achat   @relation(fields: [id_achat], references: [id])
+}
+
+model Environnementale {
+    id         Int                  @id @default(autoincrement())
+    date       DateTime
+    quantite   Float
+    type       TypeEnvironnementale
+    id_opr     Int
+    OPR        OPR                  @relation(fields: [id_opr], references: [id])
+    id_essence Int
+    Essence    Essence              @relation(fields: [id_essence], references: [id])
+}
+
+enum TypeEnvironnementale {
+    Pepiniere
+    Plantation
+}

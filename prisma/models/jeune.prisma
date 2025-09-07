@@ -1,0 +1,37 @@
+model Jeune {
+    id                     Int          @id @default(autoincrement())
+    date                   DateTime
+    accompagnement_op      String?
+    accompagnement_parrain String?
+    id_producteur          Int
+    Producteur             Producteur   @relation(fields: [id_producteur], references: [id], name: "JeuneProducteur")
+    id_parrain             Int?
+    Parrain                Producteur?  @relation(fields: [id_parrain], references: [id], name: "JeuneParrain")
+    SuiviJeune             SuiviJeune[]
+    Revolving              Revolving[]
+    Relaye                 Relaye[]
+}
+
+model SuiviJeune {
+    id          Int      @id @default(autoincrement())
+    date        DateTime
+    id_jeune    Int
+    Jeune       Jeune    @relation(fields: [id_jeune], references: [id])
+    deroulement String
+}
+
+model Revolving {
+    id       Int      @id @default(autoincrement())
+    date     DateTime
+    montant  Float
+    id_jeune Int
+    Jeune    Jeune    @relation(fields: [id_jeune], references: [id])
+}
+
+model Relaye {
+    id             Int         @id @default(autoincrement())
+    id_jeune       Int
+    Jeune          Jeune       @relation(fields: [id_jeune], references: [id])
+    id_financement Int
+    Financement    Financement @relation(fields: [id_financement], references: [id])
+}

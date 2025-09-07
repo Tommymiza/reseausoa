@@ -1,0 +1,42 @@
+model Region {
+    id       Int        @id @default(autoincrement())
+    nom      String
+    District District[]
+}
+
+model District {
+    id        Int       @id @default(autoincrement())
+    nom       String
+    id_region Int
+    region    Region    @relation(fields: [id_region], references: [id])
+    Commune   Commune[]
+}
+
+model Commune {
+    id          Int         @id @default(autoincrement())
+    nom         String
+    id_district Int
+    district    District    @relation(fields: [id_district], references: [id])
+    Fokontany   Fokontany[]
+}
+
+model Fokontany {
+    id           Int            @id @default(autoincrement())
+    nom          String
+    id_commune   Int
+    commune      Commune        @relation(fields: [id_commune], references: [id])
+    Localisation Localisation[]
+}
+
+model Localisation {
+    id           Int          @id @default(autoincrement())
+    nom          String
+    id_fokontany Int
+    longitude    Float?
+    latitude     Float?
+    nom_courant  String?
+    fokontany    Fokontany    @relation(fields: [id_fokontany], references: [id])
+    OPB          OPB[]
+    Producteur   Producteur[]
+    OPR          OPR[]
+}

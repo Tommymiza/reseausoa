@@ -1,0 +1,38 @@
+model Speculation {
+    id               Int                @id @default(autoincrement())
+    nom              String
+    type             TypeSpeculation
+    Production       Production[]
+    Semence          Semence[]
+    VenteSpeculation VenteSpeculation[]
+}
+
+enum TypeSpeculation {
+    Agriculture
+    Elevage
+    Artisanal
+}
+
+model Financement {
+    id     Int      @id @default(autoincrement())
+    nom    String
+    Relaye Relaye[]
+}
+
+model CategorySuivi {
+    id              Int               @id @default(autoincrement())
+    nom             String
+    SuiviEvaluation SuiviEvaluation[]
+}
+
+model Article {
+    id           Int            @id @default(autoincrement())
+    nom          String
+    AchatArticle AchatArticle[]
+}
+
+model Essence {
+    id               Int                @id @default(autoincrement())
+    nom              String
+    Environnementale Environnementale[]
+}
