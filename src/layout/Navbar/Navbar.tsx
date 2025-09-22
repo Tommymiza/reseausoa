@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { FiUsers } from "react-icons/fi";
@@ -231,9 +232,11 @@ function LinkItem({
       }}
     >
       <menu.icon />
-      <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-        {menu.name}
-      </Typography>
+      <Link href={menu.path || "#"}>
+        <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+          {menu.name}
+        </Typography>
+      </Link>
     </MenuItem>
   );
 }

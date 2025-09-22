@@ -1,4 +1,4 @@
-import { Delete, Edit, PlusOneRounded, Search } from "@mui/icons-material";
+import { Add, Delete, Edit, Search } from "@mui/icons-material";
 import {
   Box,
   IconButton,
@@ -136,7 +136,7 @@ export default function MaterialTable({
             table={table}
           />
           <IconButton onClick={() => table.setCreatingRow(true)}>
-            <PlusOneRounded />
+            <Add />
           </IconButton>
           <MRT_ToggleFullScreenButton table={table} />
           {props.topToolbar && props.topToolbar({ table })}

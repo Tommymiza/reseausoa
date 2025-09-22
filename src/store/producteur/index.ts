@@ -65,7 +65,6 @@ const producteurStore = create<ProducteurStore>((set) => ({
       const params = {
         args: JSON.stringify(args),
       };
-      console.log(params);
       const response = await axios.get(`/producteur`, { params });
       set({ producteurList: response.data });
       return response.data;

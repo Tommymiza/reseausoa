@@ -65,7 +65,6 @@ const oprStore = create<OprStore>((set) => ({
       const params = {
         args: JSON.stringify(args),
       };
-      console.log(params);
       const response = await axios.get(`/opr`, { params });
       set({ oprList: response.data });
       return response.data;

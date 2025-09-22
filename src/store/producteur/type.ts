@@ -1,6 +1,9 @@
 export type ProducteurItem = {
   id: number;
   nom: string;
+  actif: boolean;
+  sexe: "homme" | "femme";
+  date_naissance: string;
 };
 
 export type ProducteurStore = {

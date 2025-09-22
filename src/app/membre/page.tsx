@@ -1,5 +1,5 @@
 "use client";
-import ListOpr from "@/components/opr/List";
+import ListOpr from "@/components/membre/List";
 import { Suspense } from "react";
 
 export default function OprPage() {

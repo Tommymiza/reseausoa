@@ -1,7 +1,6 @@
 import Dashboard from "@/layout/Dashboard/Dashboard";
-import theme from "@/lib/theme";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
-import { ThemeProvider } from "@mui/material/styles";
+
 import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
@@ -26,9 +25,7 @@ export default function RootLayout({
     <html lang="fr">
       <body>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <ThemeProvider theme={theme}>
-            <Dashboard>{children}</Dashboard>
-          </ThemeProvider>
+          <Dashboard>{children}</Dashboard>
         </AppRouterCacheProvider>
       </body>
     </html>

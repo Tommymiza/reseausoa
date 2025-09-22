@@ -1,7 +1,17 @@
 export type OpbItem = {
   id: number;
   nom: string;
+  code?: string;
+  lieu_siege: string;
+  recepisse?: string;
+  date_recepisse?: string;
+  date_creation: string;
+  date_entree_opr?: string;
+  objet_opb?: string;
+  recu_opr?: string;
+  montant_opr?: number;
   id_opr: number;
+  id_localisation: number;
 };
 
 export type OpbStore = {

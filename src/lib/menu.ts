@@ -21,6 +21,6 @@ export const menus: MenuProps[] = [
   {
     name: "Membres",
     icon: MdGroups2,
-    path: "/opr",
+    path: "/membre",
   },
 ];

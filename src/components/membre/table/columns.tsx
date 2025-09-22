@@ -15,13 +15,27 @@ export default function Columns() {
         header: "Prénom",
       },
       {
-        accessorKey: "code",
-        header: "Code",
+        accessorKey: "actif",
+        header: "Actif",
+        Cell: ({ cell }) => (
+          <Chip
+            label={cell.getValue() ? "Oui" : "Non"}
+            color={cell.getValue() ? "success" : "error"}
+          />
+        ),
+        muiEditTextFieldProps: {
+          type: "checkbox",
+        },
       },
       {
         accessorKey: "sexe",
-        header: "Sexe",
+        header: "Genre",
       },
+      {
+        accessorKey: "code",
+        header: "Code",
+      },
+
       {
         accessorKey: "annee_naissance",
         header: "Année de naissance",
@@ -74,19 +88,7 @@ export default function Columns() {
         accessorKey: "nom_chef_famille",
         header: "Nom chef de famille",
       },
-      {
-        accessorKey: "actif",
-        header: "Actif",
-        Cell: ({ cell }) => (
-          <Chip
-            label={cell.getValue() ? "Oui" : "Non"}
-            color={cell.getValue() ? "success" : "error"}
-          />
-        ),
-        muiEditTextFieldProps: {
-          type: "checkbox",
-        },
-      },
+
       {
         accessorKey: "Localisation.nom",
         header: "Localisation",

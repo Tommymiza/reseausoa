@@ -1,6 +1,12 @@
 export type OprItem = {
   id: number;
   nom: string;
+  code?: string;
+  lieu_siege?: string;
+  recepisse?: string;
+  date_recepisse?: string;
+  date_creation?: string;
+  id_localisation?: number;
 };
 
 export type OprStore = {

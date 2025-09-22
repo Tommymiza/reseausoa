@@ -65,7 +65,6 @@ const opbStore = create<OpbStore>((set) => ({
       const params = {
         args: JSON.stringify(args),
       };
-      console.log(params);
       const response = await axios.get(`/opb`, { params });
       set({ opbList: response.data });
       return response.data;

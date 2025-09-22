@@ -1,25 +1,19 @@
 "use client";
-import opbStore from "@/store/opb";
-import oprStore from "@/store/opr";
 import producteurStore from "@/store/producteur";
+import { ProducteurItem } from "@/store/producteur/type";
 import {
   DeleteRounded,
   EditRounded,
   VisibilityRounded,
 } from "@mui/icons-material";
-import {
-  Box,
-  IconButton,
-  MenuItem,
-  Select,
-  Stack,
-  styled,
-} from "@mui/material";
+import { Box, IconButton, Stack, styled } from "@mui/material";
 import { useConfirm } from "material-ui-confirm";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import MaterialTable from "../table/MaterialTable";
+import Opb from "./modal/Opb";
+import Opr from "./modal/Opr";
 import Columns from "./table/columns";
 
 export default function ListOpr() {
@@ -30,35 +24,15 @@ export default function ListOpr() {
     loading,
     clearList,
   } = producteurStore();
-  const { getOprs, oprList } = oprStore();
-  const { getOpbs, opbList } = opbStore();
   const searchParams = useSearchParams();
   const filterOpb = searchParams.get("id_opb");
-  const filterOpr = searchParams.get("id_opr");
 
-  const setFilterOpb = (id_opb: number | null) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (id_opb) {
-      params.set("id_opb", id_opb.toString());
-    } else {
-      params.delete("id_opb");
-    }
-    const queryString = params.toString();
-    const newPath = `/opr${queryString ? `?${queryString}` : ""}`;
-    window.history.replaceState(null, "", newPath);
-  };
-
-  const setFilterOpr = (id_opr: number | null) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (id_opr) {
-      params.set("id_opr", id_opr.toString());
-    } else {
-      params.delete("id_opr");
-    }
-    params.delete("id_opb");
-    const queryString = params.toString();
-    const newPath = `/opr${queryString ? `?${queryString}` : ""}`;
-    window.history.replaceState(null, "", newPath);
+  const isJeune = (producteur: ProducteurItem) => {
+    if (!producteur.date_naissance) return false;
+    const dateTimeNow = new Date().getTime();
+    const dateNaissance = new Date(producteur.date_naissance).getTime();
+    const age = (dateTimeNow - dateNaissance) / (1000 * 60 * 60 * 24 * 365.25);
+    return age < 35;
   };
 
   const confirm = useConfirm();
@@ -97,48 +71,54 @@ export default function ListOpr() {
   useEffect(() => {
     getList();
   }, [filterOpb]);
-  useEffect(() => {
-    getOprs();
-    getOpbs();
-  }, []);
+
   return (
     <Box>
-      <Stack direction={"row"} spacing={2} mb={2}>
-        <Select
-          value={filterOpr || ""}
-          onChange={(e) => {
-            setFilterOpr(e.target.value ? Number(e.target.value) : null);
-          }}
-          displayEmpty
-        >
-          <MenuItem value="">-- Filtrer par OPR --</MenuItem>
-          {oprList.map((opr) => (
-            <MenuItem key={opr.id} value={opr.id}>
-              {opr.nom}
-            </MenuItem>
-          ))}
-        </Select>
-        <Select
-          value={filterOpb || ""}
-          onChange={(e) =>
-            setFilterOpb(e.target.value ? Number(e.target.value) : null)
-          }
-          displayEmpty
-        >
-          <MenuItem value="">-- Filtrer par OPB --</MenuItem>
-          {opbList
-            .filter((opb) => (filterOpr ? opb.id_opr === +filterOpr : true))
-            .map((opb) => (
-              <MenuItem key={opb.id} value={opb.id}>
-                {opb.nom}
-              </MenuItem>
-            ))}
-        </Select>
+      <Stack
+        direction={"row"}
+        alignItems="center"
+        justifyContent={"space-between"}
+        paddingX={4}
+        minHeight={100}
+      >
+        <Stack direction={"row"} spacing={4}>
+          <Opr />
+          <Opb />
+        </Stack>
+        {filterOpb && (
+          <Stack direction={"row"} spacing={4}>
+            <p style={{ fontWeight: "bold" }}>
+              Total: <u>{producteurList.length}</u>
+            </p>
+            <Stack direction={"column"}>
+              <p>
+                Actif: <u>{producteurList.filter((p) => p.actif).length}</u>
+              </p>
+              <p>
+                Non actif:{" "}
+                <u>{producteurList.filter((p) => !p.actif).length}</u>
+              </p>
+            </Stack>
+            <Stack direction={"column"}>
+              <p>
+                Homme:{" "}
+                <u>{producteurList.filter((p) => p.sexe === "homme").length}</u>
+              </p>
+              <p>
+                Femme:{" "}
+                <u>{producteurList.filter((p) => p.sexe === "femme").length}</u>
+              </p>
+              <p>
+                Jeune: <u>{producteurList.filter(isJeune).length}</u>
+              </p>
+            </Stack>
+          </Stack>
+        )}
       </Stack>
       <MaterialTable
         columns={Columns()}
         data={producteurList}
-        title="Liste Producteurs membres"
+        title="Liste membres"
         state={{
           isLoading: loading,
           columnPinning: { left: ["nom", "prenom"] },
