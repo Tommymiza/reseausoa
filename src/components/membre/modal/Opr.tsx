@@ -1,3 +1,5 @@
+import { isAdmin } from "@/lib/canActivate";
+import authStore from "@/store/auth";
 import oprStore from "@/store/opr";
 import { OprItem } from "@/store/opr/type";
 import { Add, Edit } from "@mui/icons-material";
@@ -15,6 +17,7 @@ import { useEffect, useState } from "react";
 import FormOpr from "./FormOpr";
 
 export default function Opr() {
+  const { auth } = authStore();
   const { oprList, getOprs } = oprStore();
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<OprItem | null>(null);
@@ -34,6 +37,12 @@ export default function Opr() {
   };
 
   useEffect(() => {
+    if (auth && auth.Opr) {
+      setFilterOpr(auth.Opr.id);
+    }
+  }, [auth]);
+
+  useEffect(() => {
     getOprs();
   }, []);
 
@@ -45,6 +54,7 @@ export default function Opr() {
         onChange={(e) => {
           setFilterOpr(e.target.value ? Number(e.target.value) : null);
         }}
+        disabled={!isAdmin()}
         size="small"
         label="OPR"
         sx={{ minWidth: 200 }}
@@ -57,10 +67,12 @@ export default function Opr() {
         ))}
       </TextField>
       <Stack direction={"row"}>
-        <IconButton color="primary" onClick={() => setOpen(true)}>
-          <Add />
-        </IconButton>
-        {filterOpr && (
+        {isAdmin() && (
+          <IconButton color="primary" onClick={() => setOpen(true)}>
+            <Add />
+          </IconButton>
+        )}
+        {isAdmin() && filterOpr && (
           <IconButton
             color="warning"
             onClick={() => {

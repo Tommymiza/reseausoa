@@ -1,4 +1,5 @@
-import { FaChartPie } from "react-icons/fa";
+import { FaChartPie, FaRegUser } from "react-icons/fa";
+import { IoIosSettings } from "react-icons/io";
 import { type IconType } from "react-icons/lib";
 import { MdGroups2 } from "react-icons/md";
 
@@ -22,5 +23,16 @@ export const menus: MenuProps[] = [
     name: "Membres",
     icon: MdGroups2,
     path: "/membre",
+  },
+  {
+    name: "Paramètre",
+    icon: IoIosSettings,
+    children: [
+      {
+        name: "Utilisateur",
+        icon: FaRegUser,
+        path: "/utilisateur",
+      },
+    ],
   },
 ];

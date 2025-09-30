@@ -59,7 +59,23 @@ const localisationStore = create<LocalisationStore>((set) => ({
       set({ loading: false });
     }
   },
-  getLocalisations: async (args = {}) => {
+  getLocalisations: async (
+    args = {
+      include: {
+        fokontany: {
+          include: {
+            commune: {
+              include: {
+                district: {
+                  include: { region: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    }
+  ) => {
     try {
       set({ loading: true });
       const params = {

@@ -1,12 +1,5 @@
 import { Add, Delete, Edit, Search } from "@mui/icons-material";
-import {
-  Box,
-  IconButton,
-  MenuItem,
-  Stack,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import {
   MaterialReactTable,
   type MRT_ColumnDef,
@@ -23,8 +16,6 @@ export default function MaterialTable({
   title,
   columns,
   data,
-  createFn,
-  updateFn,
   deleteFn,
   ...props
 }: MRT_TableOptions<any> & {
@@ -36,18 +27,13 @@ export default function MaterialTable({
   }: {
     table: MRT_TableInstance<any>;
   }) => React.ReactElement;
-  createFn?: (data: any) => Promise<void>;
-  updateFn?: (data: any) => Promise<void>;
-  deleteFn?: (data: any) => Promise<void>;
+  deleteFn?: (data: any) => Promise<any>;
 }) {
   const table = useMaterialReactTable({
-    ...props,
     columns,
     data,
     localization: MRT_Localization_FR,
     enableEditing: true,
-    onCreatingRowSave: async ({ exitCreatingMode, row, values }) => {},
-    onEditingRowSave: async ({ exitEditingMode, row, values }) => {},
     editDisplayMode: "row",
     createDisplayMode: "row",
     muiTableHeadRowProps: {
@@ -89,16 +75,6 @@ export default function MaterialTable({
         pageSize: 10,
         pageIndex: 0,
       },
-    },
-    renderRowActionMenuItems: ({ row }) => {
-      return [
-        <MenuItem key="edit" onClick={() => console.info("Edit")}>
-          Edit
-        </MenuItem>,
-        <MenuItem key="delete" onClick={() => console.info("Delete")}>
-          Delete
-        </MenuItem>,
-      ];
     },
     renderRowActions: ({ row, table }) => (
       <Box sx={{ display: "flex", gap: "1rem" }}>
@@ -143,6 +119,7 @@ export default function MaterialTable({
         </Stack>
       </Stack>
     ),
+    ...props,
   });
 
   return <MaterialReactTable table={table} />;

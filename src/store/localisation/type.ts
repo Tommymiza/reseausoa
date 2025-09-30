@@ -1,6 +1,18 @@
 export type LocalisationItem = {
   id: number;
   nom: string;
+  fokontany: {
+    nom: string;
+    commune: {
+      nom: string;
+      district: {
+        nom: string;
+        region: {
+          nom: string;
+        };
+      };
+    };
+  };
 };
 
 export type LocalisationStore = {

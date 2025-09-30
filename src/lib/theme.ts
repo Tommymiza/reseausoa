@@ -10,7 +10,6 @@ const themeOptions: ThemeOptions = {
       main: PRIMARY_MAIN,
       contrastText: "#ffffff",
     },
-    // Quelques couleurs secondaires / utilitaires par défaut
     secondary: {
       main: "#6aa86b",
     },

@@ -29,7 +29,7 @@ export default function FormOpr({
   edit: OprItem | null;
 }) {
   const { createOpr, updateOpr } = oprStore();
-  const { getLocalisations, localisationList } = localisationStore();
+  const { localisationList } = localisationStore();
   const {
     handleSubmit,
     control,
@@ -65,10 +65,6 @@ export default function FormOpr({
       console.error("Erreur lors de la création de :", error);
     }
   };
-
-  useEffect(() => {
-    getLocalisations();
-  }, []);
 
   useEffect(() => {
     if (edit) {
@@ -198,7 +194,9 @@ export default function FormOpr({
               onChange={(_, newValue) =>
                 field.onChange(newValue ? Number(newValue.id) : undefined)
               }
-              getOptionLabel={(option) => option.nom}
+              getOptionLabel={(option) =>
+                `${option.nom} - ${option.fokontany.commune.nom} (${option.fokontany.commune.district.region.nom})`
+              }
               getOptionKey={(option) => option.id.toString()}
               renderInput={(params) => (
                 <TextField

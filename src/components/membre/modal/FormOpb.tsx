@@ -36,7 +36,7 @@ export default function FormOpb({
   id_opr: number;
 }) {
   const { createOpb, updateOpb } = opbStore();
-  const { getLocalisations, localisationList } = localisationStore();
+  const { localisationList } = localisationStore();
   const {
     handleSubmit,
     control,
@@ -78,10 +78,6 @@ export default function FormOpb({
       console.error("Erreur lors de la création :", error);
     }
   };
-
-  useEffect(() => {
-    getLocalisations();
-  }, []);
 
   useEffect(() => {
     if (edit) {
@@ -268,7 +264,9 @@ export default function FormOpb({
               onChange={(_, newValue) =>
                 field.onChange(newValue ? Number(newValue.id) : undefined)
               }
-              getOptionLabel={(option) => option.nom}
+              getOptionLabel={(option) =>
+                `${option.nom} - ${option.fokontany.commune.nom} (${option.fokontany.commune.district.region.nom})`
+              }
               getOptionKey={(option) => option.id.toString()}
               renderInput={(params) => (
                 <TextField
