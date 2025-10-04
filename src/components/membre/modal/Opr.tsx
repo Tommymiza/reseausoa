@@ -12,7 +12,7 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import FormOpr from "./FormOpr";
 
@@ -23,6 +23,7 @@ export default function Opr() {
   const [edit, setEdit] = useState<OprItem | null>(null);
   const searchParams = useSearchParams();
   const filterOpr = searchParams.get("id_opr");
+  const pathname = usePathname();
   const setFilterOpr = (id_opr: number | null) => {
     const params = new URLSearchParams(searchParams.toString());
     if (id_opr) {
@@ -32,7 +33,7 @@ export default function Opr() {
     }
     params.delete("id_opb");
     const queryString = params.toString();
-    const newPath = `/membre${queryString ? `?${queryString}` : ""}`;
+    const newPath = pathname + `${queryString ? `?${queryString}` : ""}`;
     window.history.replaceState(null, "", newPath);
   };
 

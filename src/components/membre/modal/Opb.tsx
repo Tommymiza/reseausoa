@@ -10,7 +10,7 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import FormOpb from "./FormOpb";
 
@@ -19,6 +19,7 @@ export default function Opb() {
   const searchParams = useSearchParams();
   const filterOpr = searchParams.get("id_opr");
   const filterOpb = searchParams.get("id_opb");
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<OpbItem | null>(null);
   const setFilterOpb = (id_opb: number | null) => {
@@ -29,7 +30,7 @@ export default function Opb() {
       params.delete("id_opb");
     }
     const queryString = params.toString();
-    const newPath = `/membre${queryString ? `?${queryString}` : ""}`;
+    const newPath = pathname + `${queryString ? `?${queryString}` : ""}`;
     window.history.replaceState(null, "", newPath);
   };
 

@@ -17,6 +17,7 @@ export default function MaterialTable({
   columns,
   data,
   deleteFn,
+  canCreate = true,
   ...props
 }: MRT_TableOptions<any> & {
   data: any[];
@@ -28,6 +29,7 @@ export default function MaterialTable({
     table: MRT_TableInstance<any>;
   }) => React.ReactElement;
   deleteFn?: (data: any) => Promise<any>;
+  canCreate?: boolean;
 }) {
   const table = useMaterialReactTable({
     columns,
@@ -111,9 +113,11 @@ export default function MaterialTable({
             }}
             table={table}
           />
-          <IconButton onClick={() => table.setCreatingRow(true)}>
-            <Add />
-          </IconButton>
+          {canCreate && (
+            <IconButton onClick={() => table.setCreatingRow(true)}>
+              <Add />
+            </IconButton>
+          )}
           <MRT_ToggleFullScreenButton table={table} />
           {props.topToolbar && props.topToolbar({ table })}
         </Stack>
