@@ -169,26 +169,24 @@ export default function ListJeune({
   const canUpdate = canActivate("Jeune", "U");
   const canDelete = canActivate("Jeune", "D");
 
-  const handleDelete = (id: number) => {
-    confirm({
+  const handleDelete = async (id: number) => {
+    const isOk = await confirm({
       title: "Supprimer",
       description: "Voulez-vous vraiment supprimer ce jeune ?",
       confirmationText: "Oui",
       cancellationText: "Annuler",
-    })
-      .then(async () => {
-        try {
-          await deleteJeune(id);
-          if (id === selected?.id) {
-            setRowSelection({});
-          }
-          refreshList();
-        } catch (error: unknown) {
-          const message = error instanceof Error ? error.message : undefined;
-          toast.error(message ?? "Impossible de supprimer le jeune");
-        }
-      })
-      .catch(() => null);
+    });
+    if (!isOk.confirmed) return;
+    try {
+      await deleteJeune(id);
+      if (id === selected?.id) {
+        setRowSelection({});
+      }
+      refreshList();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : undefined;
+      toast.error(message ?? "Impossible de supprimer le jeune");
+    }
   };
 
   useEffect(() => {

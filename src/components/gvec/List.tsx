@@ -2,118 +2,148 @@
 
 import MaterialTable from "@/components/table/MaterialTable";
 import { canActivate } from "@/lib/canActivate";
-import suiviJeuneStore from "@/store/suiviJeune";
+import gvecStore from "@/store/gvec";
+import { GVECItem } from "@/store/gvec/type";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { DeleteRounded, EditRounded } from "@mui/icons-material";
 import { IconButton, Stack, styled } from "@mui/material";
+import { MRT_RowSelectionState } from "material-react-table";
 import { useConfirm } from "material-ui-confirm";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as Yup from "yup";
 
 import Columns from "./table/columns";
 
-type FormValues = {
-  date: string;
-  deroulement: string;
-  id_jeune: number;
-  type_accompagnateur: string;
-};
-
-const suiviJeuneSchema = Yup.object({
+const gvecSchema = Yup.object({
+  nom: Yup.string().required("Nom requis"),
   date: Yup.string().required("Date requise"),
-  deroulement: Yup.string().required("Déroulement requis"),
-  id_jeune: Yup.number().min(1).required(),
-  type_accompagnateur: Yup.string().required("Type d'accompagnateur requis"),
+  id_localisation: Yup.number()
+    .typeError("Localisation requise")
+    .min(1, "Localisation requise")
+    .required("Localisation requise"),
 });
 
-type ListSuiviJeuneProps = {
-  jeuneId: number;
-};
+export default function ListGVEC({
+  setSelected,
+  selected,
+}: {
+  setSelected: (item: GVECItem | null) => void;
+  selected: GVECItem | null;
+}) {
+  const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
 
-export type { FormValues };
-
-export default function ListSuiviJeune({ jeuneId }: ListSuiviJeuneProps) {
   const {
-    suiviJeuneList,
-    getSuiviJeunes,
-    deleteSuiviJeune,
-    updateSuiviJeune,
-    createSuiviJeune,
+    gvecList,
+    getGVECs,
+    updateGVEC,
+    deleteGVEC,
+    createGVEC,
     loading,
-  } = suiviJeuneStore();
+    clearList,
+  } = gvecStore();
 
   const {
     control,
     trigger,
     getValues,
     reset,
-    setValue,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(suiviJeuneSchema),
+    resolver: yupResolver(gvecSchema),
     mode: "onChange",
     defaultValues: {
+      nom: "",
       date: new Date().toISOString().substring(0, 10),
-      deroulement: "",
-      id_jeune: jeuneId,
-      type_accompagnateur: "Technicien",
+      id_localisation: 0,
     },
   });
 
-  useEffect(() => {
-    setValue("id_jeune", jeuneId);
-  }, [jeuneId, setValue]);
+  const confirm = useConfirm();
 
   const refreshList = useCallback(() => {
-    getSuiviJeunes({
-      where: {
-        id_jeune: jeuneId,
+    getGVECs({
+      include: {
+        Localisation: true,
       },
       orderBy: {
         date: "desc",
       },
     }).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : undefined;
-      toast.error(message ?? "Impossible de récupérer les suivis du jeune");
+      toast.error(message ?? "Impossible de récupérer les GVEC");
     });
-  }, [getSuiviJeunes, jeuneId]);
+  }, [getGVECs]);
 
   useEffect(() => {
     refreshList();
-  }, [jeuneId, refreshList]);
+  }, [refreshList]);
 
-  const confirm = useConfirm();
-  const canUpdate = canActivate("SuiviJeune", "U");
-  const canDelete = canActivate("SuiviJeune", "D");
+  const canUpdate = canActivate("GVEC", "U");
+  const canDelete = canActivate("GVEC", "D");
 
   const handleDelete = async (id: number) => {
     const isOk = await confirm({
       title: "Supprimer",
-      description: "Voulez-vous vraiment supprimer ce suivi ?",
+      description: "Voulez-vous vraiment supprimer ce GVEC ?",
       confirmationText: "Oui",
       cancellationText: "Annuler",
     });
     if (!isOk.confirmed) return;
     try {
-      await deleteSuiviJeune(id);
+      await deleteGVEC(id);
+      if (id === selected?.id) {
+        setRowSelection({});
+      }
       refreshList();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : undefined;
-      toast.error(message ?? "Impossible de supprimer le suivi");
+      toast.error(message ?? "Impossible de supprimer le GVEC");
     }
   };
+
+  useEffect(() => {
+    const selectedIds = Object.keys(rowSelection).map((key) => Number(key));
+    if (selectedIds.length === 0) {
+      setSelected(null);
+      return;
+    }
+    const selectedId = selectedIds[0];
+    const found = gvecList.find((item) => item.id === selectedId);
+    if (!found) {
+      setSelected(null);
+      return;
+    }
+    setSelected(found);
+  }, [rowSelection, gvecList, setSelected]);
 
   return (
     <MaterialTable
       columns={Columns({ control, errors })}
       getRowId={(originalRow) => originalRow.id}
-      data={suiviJeuneList}
-      title="Suivi du jeune"
+      data={gvecList}
+      title="Liste des GVEC"
+      enableRowSelection
+      enableBatchRowSelection
+      onRowSelectionChange={(updater) => {
+        if (typeof updater !== "function") return;
+        const newSelection = updater(rowSelection);
+        const lastSelectedIds = Object.keys(rowSelection);
+        const selectedIds = Object.keys(newSelection).filter(
+          (id) => !lastSelectedIds.includes(id)
+        );
+        if (selectedIds.length > 0) {
+          const newSelectedId = selectedIds[selectedIds.length - 1];
+          setRowSelection({ [newSelectedId]: true });
+        } else {
+          setRowSelection({});
+        }
+      }}
       state={{
         isLoading: loading,
-        columnPinning: { left: ["date"] },
+        rowSelection,
+        columnPinning: { left: ["mrt-row-select", "nom", "date"] },
       }}
       onEditingRowSave={async ({ exitEditingMode, row }) => {
         try {
@@ -121,29 +151,24 @@ export default function ListSuiviJeune({ jeuneId }: ListSuiviJeuneProps) {
           if (!isValid) return;
           const values = getValues();
           const payload = {
+            nom: values.nom?.trim(),
             date: new Date(values.date).toISOString(),
-            deroulement: values.deroulement,
-            id_jeune: jeuneId,
-            type_accompagnateur:
-              values.type_accompagnateur === null
-                ? "Technicien"
-                : values.type_accompagnateur,
+            id_localisation: Number(values.id_localisation),
           };
-          await updateSuiviJeune({
+          await updateGVEC({
             id: row.original.id,
-            suiviJeune: payload,
+            gvec: payload,
           });
           refreshList();
           reset({
+            nom: "",
             date: new Date().toISOString().substring(0, 10),
-            deroulement: "",
-            id_jeune: jeuneId,
-            type_accompagnateur: "Technicien",
+            id_localisation: 0,
           });
           exitEditingMode();
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : undefined;
-          toast.error(message ?? "Impossible de mettre à jour le suivi");
+          toast.error(message ?? "Impossible de mettre à jour le GVEC");
         }
       }}
       onCreatingRowSave={async ({ exitCreatingMode }) => {
@@ -152,43 +177,36 @@ export default function ListSuiviJeune({ jeuneId }: ListSuiviJeuneProps) {
           if (!isValid) return;
           const values = getValues();
           const payload = {
+            nom: values.nom?.trim(),
             date: new Date(values.date).toISOString(),
-            deroulement: values.deroulement,
-            id_jeune: jeuneId,
-            type_accompagnateur:
-              values.type_accompagnateur === null
-                ? null
-                : values.type_accompagnateur,
+            id_localisation: Number(values.id_localisation),
           };
-          await createSuiviJeune(payload);
+          await createGVEC(payload);
           refreshList();
           reset({
+            nom: "",
             date: new Date().toISOString().substring(0, 10),
-            deroulement: "",
-            id_jeune: jeuneId,
-            type_accompagnateur: "Technicien",
+            id_localisation: 0,
           });
           exitCreatingMode();
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : undefined;
-          toast.error(message ?? "Impossible de créer le suivi");
+          toast.error(message ?? "Impossible de créer le GVEC");
         }
       }}
       onCreatingRowCancel={({ table }) => {
         reset({
+          nom: "",
           date: new Date().toISOString().substring(0, 10),
-          deroulement: "",
-          id_jeune: jeuneId,
-          type_accompagnateur: "Technicien",
+          id_localisation: 0,
         });
         table.setCreatingRow(null);
       }}
       onEditingRowCancel={({ table }) => {
         reset({
+          nom: "",
           date: new Date().toISOString().substring(0, 10),
-          deroulement: "",
-          id_jeune: jeuneId,
-          type_accompagnateur: "Technicien",
+          id_localisation: 0,
         });
         table.setEditingRow(null);
       }}
@@ -199,10 +217,9 @@ export default function ListSuiviJeune({ jeuneId }: ListSuiviJeuneProps) {
               color="warning"
               onClick={() => {
                 reset({
+                  nom: row.original.nom,
                   date: row.original.date,
-                  deroulement: row.original.deroulement,
-                  id_jeune: jeuneId,
-                  type_accompagnateur: row.original.type_accompagnateur ?? null,
+                  id_localisation: row.original.id_localisation,
                 });
                 table.setEditingRow(row);
               }}

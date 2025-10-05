@@ -1,8 +1,14 @@
-import { MenuItem, TextField, Typography } from "@mui/material";
+import {
+  Checkbox,
+  FormControlLabel,
+  MenuItem,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import { type MRT_ColumnDef } from "material-react-table";
 import { useMemo } from "react";
-import { Control, Controller } from "react-hook-form";
+import { Control, Controller, useWatch } from "react-hook-form";
 
 import { AccompagnementItem } from "@/store/accompagnement/type";
 import categoryThemeStore from "@/store/categoryTheme";
@@ -11,7 +17,58 @@ const typeOptions = [
   { value: "ACCOMPAGNEMENT_SUIVI", label: "Accompagnement suivi" },
   { value: "VISITE_ECHANGE", label: "Visite échange" },
   { value: "FORMATION", label: "Formation" },
+  { value: "ANIMATION_SENSIBILISATION", label: "Animation sensibilisation" },
 ];
+
+// Fonction pour calculer l'âge à partir de la date de naissance
+const calculateAge = (dateNaissance: string | null): number => {
+  if (!dateNaissance) return 0;
+  const today = new Date();
+  const birthDate = new Date(dateNaissance);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+  return age;
+};
+
+// Fonction pour compter les participants par catégorie
+const countParticipants = (accompagnement: AccompagnementItem) => {
+  if (
+    !accompagnement.AccompagnementProd ||
+    accompagnement.AccompagnementProd.length === 0
+  ) {
+    return { nbHommes: 0, nbFemmes: 0, nbJeunes: 0 };
+  }
+
+  let nbHommes = 0;
+  let nbFemmes = 0;
+  let nbJeunes = 0;
+
+  accompagnement.AccompagnementProd.forEach((accompProd) => {
+    const producteur = accompProd.Producteur;
+    if (!producteur) return;
+
+    const age = calculateAge(producteur.date_naissance);
+    const isJeune = age > 0 && age <= 35; // Considérer comme jeune si <= 35 ans
+
+    if (producteur.sexe === "homme") {
+      nbHommes++;
+    } else if (producteur.sexe === "femme") {
+      nbFemmes++;
+    }
+
+    if (isJeune) {
+      nbJeunes++;
+    }
+  });
+
+  return { nbHommes, nbFemmes, nbJeunes };
+};
 
 export default function Columns({
   control,
@@ -21,6 +78,7 @@ export default function Columns({
   errors: any;
 }) {
   const { categoryThemeList } = categoryThemeStore();
+  const activiteDeMasse = useWatch({ control, name: "activite_de_masse" });
   const col = useMemo<MRT_ColumnDef<AccompagnementItem>[]>(
     () => [
       {
@@ -135,6 +193,7 @@ export default function Columns({
             render={({ field }) => (
               <TextField
                 {...field}
+                value={field.value ?? ""}
                 type="number"
                 fullWidth
                 variant="outlined"
@@ -176,6 +235,7 @@ export default function Columns({
             render={({ field }) => (
               <TextField
                 {...field}
+                value={field.value ?? ""}
                 fullWidth
                 multiline
                 variant="outlined"
@@ -197,6 +257,7 @@ export default function Columns({
             render={({ field }) => (
               <TextField
                 {...field}
+                value={field.value ?? ""}
                 fullWidth
                 multiline
                 variant="outlined"
@@ -218,6 +279,7 @@ export default function Columns({
             render={({ field }) => (
               <TextField
                 {...field}
+                value={field.value ?? ""}
                 fullWidth
                 multiline
                 variant="outlined"
@@ -239,6 +301,7 @@ export default function Columns({
             render={({ field }) => (
               <TextField
                 {...field}
+                value={field.value ?? ""}
                 fullWidth
                 multiline
                 variant="outlined"
@@ -250,8 +313,129 @@ export default function Columns({
           />
         ),
       },
+      {
+        accessorKey: "activite_de_masse",
+        header: "Activité de masse",
+        Cell: ({ cell }) => (cell.getValue() ? "Oui" : "Non"),
+        Edit: () => (
+          <Controller
+            name="activite_de_masse"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={field.value ?? false}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                  />
+                }
+                label="Activité de masse"
+              />
+            )}
+          />
+        ),
+      },
+      {
+        accessorKey: "nb_hommes",
+        header: "Nb Hommes",
+        enableHiding: true,
+        columnVisibility: activiteDeMasse,
+        Cell: ({ row }) => {
+          const accompagnement = row.original;
+          if (accompagnement.activite_de_masse) {
+            return accompagnement.nb_hommes ?? 0;
+          }
+          const { nbHommes } = countParticipants(accompagnement);
+          return nbHommes;
+        },
+        Edit: () =>
+          activiteDeMasse ? (
+            <Controller
+              name="nb_hommes"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  value={field.value ?? ""}
+                  type="number"
+                  fullWidth
+                  variant="outlined"
+                  label="Nombre d'hommes"
+                  error={!!errors.nb_hommes}
+                  helperText={errors.nb_hommes?.message}
+                />
+              )}
+            />
+          ) : null,
+      },
+      {
+        accessorKey: "nb_femmes",
+        header: "Nb Femmes",
+        enableHiding: true,
+        columnVisibility: activiteDeMasse,
+        Cell: ({ row }) => {
+          const accompagnement = row.original;
+          if (accompagnement.activite_de_masse) {
+            return accompagnement.nb_femmes ?? 0;
+          }
+          const { nbFemmes } = countParticipants(accompagnement);
+          return nbFemmes;
+        },
+        Edit: () =>
+          activiteDeMasse ? (
+            <Controller
+              name="nb_femmes"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  value={field.value ?? ""}
+                  type="number"
+                  fullWidth
+                  variant="outlined"
+                  label="Nombre de femmes"
+                  error={!!errors.nb_femmes}
+                  helperText={errors.nb_femmes?.message}
+                />
+              )}
+            />
+          ) : null,
+      },
+      {
+        accessorKey: "nb_jeunes",
+        header: "Nb Jeunes",
+        enableHiding: true,
+        columnVisibility: activiteDeMasse,
+        Cell: ({ row }) => {
+          const accompagnement = row.original;
+          if (accompagnement.activite_de_masse) {
+            return accompagnement.nb_jeunes ?? 0;
+          }
+          const { nbJeunes } = countParticipants(accompagnement);
+          return nbJeunes;
+        },
+        Edit: () =>
+          activiteDeMasse ? (
+            <Controller
+              name="nb_jeunes"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  value={field.value ?? ""}
+                  type="number"
+                  fullWidth
+                  variant="outlined"
+                  label="Nombre de jeunes"
+                  error={!!errors.nb_jeunes}
+                  helperText={errors.nb_jeunes?.message}
+                />
+              )}
+            />
+          ) : null,
+      },
     ],
-    [control, errors, categoryThemeList]
+    [control, errors, categoryThemeList, activiteDeMasse]
   );
 
   return col;

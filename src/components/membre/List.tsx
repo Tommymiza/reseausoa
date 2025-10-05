@@ -133,16 +133,21 @@ export default function ListOpr() {
   console.log(errors);
 
   const confirm = useConfirm();
-  const handleDelete = (id: number) => {
-    confirm({
+  const handleDelete = async (id: number) => {
+    const isOk = await confirm({
       title: "Supprimer",
       description: "Voulez-vous vraiment supprimer ce membre ?",
       confirmationText: "Oui",
       cancellationText: "Annuler",
-    }).then(async () => {
+    });
+    if (!isOk.confirmed) return;
+    try {
       await deleteProducteur(id);
       refreshList();
-    });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : undefined;
+      toast.error(message ?? "Impossible de supprimer le membre");
+    }
   };
 
   const refreshList = () => {

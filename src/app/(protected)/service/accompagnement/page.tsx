@@ -10,7 +10,7 @@ export default function Accompagnement() {
   return (
     <Stack direction={"row"} gap={2} alignItems="flex-start">
       <ListAccompagnement setSelected={setSelected} selected={selected} />
-      {selected && (
+      {selected && !selected.activite_de_masse && (
         <ListAccompagnementProd
           accompagnementId={selected.id}
           key={selected.id}

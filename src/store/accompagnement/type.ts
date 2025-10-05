@@ -15,7 +15,15 @@ export type AccompagnementItem = {
   problematique: string | null;
   solution: string | null;
   remarque: string | null;
-  type: "ACCOMPAGNEMENT_SUIVI" | "VISITE_ECHANGE" | "FORMATION";
+  activite_de_masse: boolean;
+  nb_hommes: number | null;
+  nb_femmes: number | null;
+  nb_jeunes: number | null;
+  type:
+    | "ACCOMPAGNEMENT_SUIVI"
+    | "VISITE_ECHANGE"
+    | "FORMATION"
+    | "ANIMATION_SENSIBILISATION";
   id_category_theme: number;
   id_opr: number;
   OPR?: OprItem | null;

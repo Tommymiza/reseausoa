@@ -7,11 +7,12 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { DeleteRounded, EditRounded } from "@mui/icons-material";
 import { IconButton, Stack, styled } from "@mui/material";
 import { useConfirm } from "material-ui-confirm";
-import { useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as Yup from "yup";
 
+import accompagnementStore from "@/store/accompagnement";
 import { useSearchParams } from "next/navigation";
 import MaterialTable from "../table/MaterialTable";
 import Columns from "./table/columns";
@@ -47,10 +48,13 @@ export default function ListAccompagnementProd({
     createAccompagnementProd,
     loading,
   } = accompagnementProdStore();
+
+  const { getAccompagnements } = accompagnementStore();
+
   const searchParams = useSearchParams();
   const filterOpr = searchParams.get("id_opr");
 
-  const { producteurList, getProducteurs } = producteurStore();
+  const { getProducteurs } = producteurStore();
 
   const {
     control,
@@ -67,6 +71,35 @@ export default function ListAccompagnementProd({
       id_type_accompagnement: accompagnementId,
     },
   });
+  const filterOprId = useMemo(() => {
+    if (!filterOpr) return undefined;
+    const parsed = Number(filterOpr);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  }, [filterOpr]);
+  const refreshListAccompagnement = useCallback(() => {
+    const args: Record<string, unknown> = {
+      include: {
+        CategoryThemeAccompagnement: true,
+        AccompagnementProd: {
+          include: {
+            Producteur: true,
+          },
+        },
+      },
+      orderBy: {
+        date: "desc",
+      },
+    };
+
+    if (filterOprId !== undefined) {
+      args.where = { id_opr: filterOprId };
+    }
+
+    getAccompagnements(args).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : undefined;
+      toast.error(message ?? "Impossible de récupérer les accompagnements");
+    });
+  }, [filterOprId, getAccompagnements]);
 
   const refreshList = () => {
     getAccompagnementProds({
@@ -81,6 +114,7 @@ export default function ListAccompagnementProd({
         Producteur: { nom: "asc" },
       },
     });
+    refreshListAccompagnement();
   };
 
   useEffect(() => {
@@ -109,26 +143,22 @@ export default function ListAccompagnementProd({
   const canUpdate = canActivate("Membre", "U");
   const canDelete = canActivate("Membre", "D");
 
-  const handleDelete = (id: number) => {
-    confirm({
+  const handleDelete = async (id: number) => {
+    const isOk = await confirm({
       title: "Supprimer",
       description:
         "Voulez-vous vraiment supprimer ce producteur dans cet accompagnement ?",
       confirmationText: "Oui",
       cancellationText: "Annuler",
-    })
-      .then(async () => {
-        try {
-          await deleteAccompagnementProd(id);
-          refreshList();
-        } catch (error: unknown) {
-          const message = error instanceof Error ? error.message : undefined;
-          toast.error(
-            message ?? "Impossible de supprimer l'accompagnement prod"
-          );
-        }
-      })
-      .catch(() => null);
+    });
+    if (!isOk.confirmed) return;
+    try {
+      await deleteAccompagnementProd(id);
+      refreshList();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : undefined;
+      toast.error(message ?? "Impossible de supprimer l'accompagnement prod");
+    }
   };
 
   return (

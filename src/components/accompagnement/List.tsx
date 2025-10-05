@@ -23,9 +23,18 @@ const accompagnementSchema = Yup.object({
   problematique: Yup.string().nullable(),
   solution: Yup.string().nullable(),
   remarque: Yup.string().nullable(),
+  activite_de_masse: Yup.boolean(),
+  nb_hommes: Yup.number().nullable().min(0, "Nombre invalide"),
+  nb_femmes: Yup.number().nullable().min(0, "Nombre invalide"),
+  nb_jeunes: Yup.number().nullable().min(0, "Nombre invalide"),
   type: Yup.string()
     .oneOf(
-      ["ACCOMPAGNEMENT_SUIVI", "VISITE_ECHANGE", "FORMATION"],
+      [
+        "ACCOMPAGNEMENT_SUIVI",
+        "VISITE_ECHANGE",
+        "FORMATION",
+        "ANIMATION_SENSIBILISATION",
+      ],
       "Type invalide"
     )
     .required("Type requis"),
@@ -75,6 +84,10 @@ export default function ListAccompagnement({
       problematique: "",
       solution: "",
       remarque: "",
+      activite_de_masse: false,
+      nb_hommes: null,
+      nb_femmes: null,
+      nb_jeunes: null,
       type: "ACCOMPAGNEMENT_SUIVI",
       id_category_theme: 0,
       id_opr: filterOprId ?? 0,
@@ -116,27 +129,24 @@ export default function ListAccompagnement({
   const canUpdate = canActivate("Membre", "U");
   const canDelete = canActivate("Membre", "D");
 
-  const handleDelete = (id: number) => {
-    confirm({
+  const handleDelete = async (id: number) => {
+    const isOk = await confirm({
       title: "Supprimer",
       description: "Voulez-vous vraiment supprimer cet accompagnement ?",
       confirmationText: "Oui",
       cancellationText: "Annuler",
-    })
-      .then(async () => {
-        try {
-          await deleteAccompagnement(id);
-          if (id === selected?.id) {
-            console.log("reset selection");
-            setRowSelection({});
-          }
-          refreshList();
-        } catch (error: unknown) {
-          const message = error instanceof Error ? error.message : undefined;
-          toast.error(message ?? "Impossible de supprimer l'accompagnement");
-        }
-      })
-      .catch(() => null);
+    });
+    if (!isOk.confirmed) return;
+    try {
+      await deleteAccompagnement(id);
+      if (id === selected?.id) {
+        setRowSelection({});
+      }
+      refreshList();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : undefined;
+      toast.error(message ?? "Impossible de supprimer l'accompagnement");
+    }
   };
 
   useEffect(() => {
@@ -190,6 +200,12 @@ export default function ListAccompagnement({
             ...values,
             date: new Date(values.date).toISOString(),
             duree: values.duree === null ? null : Number(values.duree),
+            nb_hommes:
+              values.nb_hommes === null ? null : Number(values.nb_hommes),
+            nb_femmes:
+              values.nb_femmes === null ? null : Number(values.nb_femmes),
+            nb_jeunes:
+              values.nb_jeunes === null ? null : Number(values.nb_jeunes),
             id_opr: Number(values.id_opr),
             id_category_theme: Number(values.id_category_theme),
           };
@@ -216,6 +232,12 @@ export default function ListAccompagnement({
             ...values,
             date: new Date(values.date).toISOString(),
             duree: values.duree === null ? null : Number(values.duree),
+            nb_hommes:
+              values.nb_hommes === null ? null : Number(values.nb_hommes),
+            nb_femmes:
+              values.nb_femmes === null ? null : Number(values.nb_femmes),
+            nb_jeunes:
+              values.nb_jeunes === null ? null : Number(values.nb_jeunes),
             id_opr: Number(values.id_opr),
             id_category_theme: Number(values.id_category_theme),
           };
@@ -237,6 +259,10 @@ export default function ListAccompagnement({
           problematique: "",
           solution: "",
           remarque: "",
+          activite_de_masse: false,
+          nb_hommes: null,
+          nb_femmes: null,
+          nb_jeunes: null,
           type: "ACCOMPAGNEMENT_SUIVI",
           id_category_theme: 0,
           id_opr: filterOprId ?? 0,
@@ -252,6 +278,10 @@ export default function ListAccompagnement({
           problematique: "",
           solution: "",
           remarque: "",
+          activite_de_masse: false,
+          nb_hommes: null,
+          nb_femmes: null,
+          nb_jeunes: null,
           type: "ACCOMPAGNEMENT_SUIVI",
           id_category_theme: 0,
           id_opr: filterOprId ?? 0,
@@ -272,6 +302,10 @@ export default function ListAccompagnement({
                   problematique: row.original.problematique ?? "",
                   solution: row.original.solution ?? "",
                   remarque: row.original.remarque ?? "",
+                  activite_de_masse: row.original.activite_de_masse ?? false,
+                  nb_hommes: row.original.nb_hommes,
+                  nb_femmes: row.original.nb_femmes,
+                  nb_jeunes: row.original.nb_jeunes,
                   type: row.original.type,
                   id_category_theme: row.original.id_category_theme,
                   id_opr: row.original.id_opr,

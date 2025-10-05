@@ -63,6 +63,11 @@ export const menus: MenuProps[] = [
         icon: MdGroups2,
         path: "/service/action-environnementale",
       },
+      {
+        name: "GVEC",
+        icon: MdGroups2,
+        path: "/service/gvec",
+      },
     ],
   },
   {

@@ -2,118 +2,138 @@
 
 import MaterialTable from "@/components/table/MaterialTable";
 import { canActivate } from "@/lib/canActivate";
-import suiviJeuneStore from "@/store/suiviJeune";
+import articleStore from "@/store/article";
+import { ArticleItem } from "@/store/article/type";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { DeleteRounded, EditRounded } from "@mui/icons-material";
 import { IconButton, Stack, styled } from "@mui/material";
+import { MRT_RowSelectionState } from "material-react-table";
 import { useConfirm } from "material-ui-confirm";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as Yup from "yup";
 
 import Columns from "./table/columns";
 
-type FormValues = {
-  date: string;
-  deroulement: string;
-  id_jeune: number;
-  type_accompagnateur: string;
-};
-
-const suiviJeuneSchema = Yup.object({
-  date: Yup.string().required("Date requise"),
-  deroulement: Yup.string().required("Déroulement requis"),
-  id_jeune: Yup.number().min(1).required(),
-  type_accompagnateur: Yup.string().required("Type d'accompagnateur requis"),
+const articleSchema = Yup.object({
+  nom: Yup.string().required("Nom requis"),
 });
 
-type ListSuiviJeuneProps = {
-  jeuneId: number;
-};
+export default function ListArticle({
+  setSelected,
+  selected,
+}: {
+  setSelected: (item: ArticleItem | null) => void;
+  selected: ArticleItem | null;
+}) {
+  const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
 
-export type { FormValues };
-
-export default function ListSuiviJeune({ jeuneId }: ListSuiviJeuneProps) {
   const {
-    suiviJeuneList,
-    getSuiviJeunes,
-    deleteSuiviJeune,
-    updateSuiviJeune,
-    createSuiviJeune,
+    articleList,
+    getArticles,
+    updateArticle,
+    deleteArticle,
+    createArticle,
     loading,
-  } = suiviJeuneStore();
+    clearList,
+  } = articleStore();
 
   const {
     control,
     trigger,
     getValues,
     reset,
-    setValue,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(suiviJeuneSchema),
+    resolver: yupResolver(articleSchema),
     mode: "onChange",
     defaultValues: {
-      date: new Date().toISOString().substring(0, 10),
-      deroulement: "",
-      id_jeune: jeuneId,
-      type_accompagnateur: "Technicien",
+      nom: "",
     },
   });
 
-  useEffect(() => {
-    setValue("id_jeune", jeuneId);
-  }, [jeuneId, setValue]);
+  const confirm = useConfirm();
 
   const refreshList = useCallback(() => {
-    getSuiviJeunes({
-      where: {
-        id_jeune: jeuneId,
-      },
+    getArticles({
       orderBy: {
-        date: "desc",
+        nom: "asc",
       },
     }).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : undefined;
-      toast.error(message ?? "Impossible de récupérer les suivis du jeune");
+      toast.error(message ?? "Impossible de récupérer les articles");
     });
-  }, [getSuiviJeunes, jeuneId]);
+  }, [getArticles]);
 
   useEffect(() => {
     refreshList();
-  }, [jeuneId, refreshList]);
+  }, [refreshList]);
 
-  const confirm = useConfirm();
-  const canUpdate = canActivate("SuiviJeune", "U");
-  const canDelete = canActivate("SuiviJeune", "D");
+  const canUpdate = canActivate("Article", "U");
+  const canDelete = canActivate("Article", "D");
 
   const handleDelete = async (id: number) => {
     const isOk = await confirm({
       title: "Supprimer",
-      description: "Voulez-vous vraiment supprimer ce suivi ?",
+      description: "Voulez-vous vraiment supprimer cet article ?",
       confirmationText: "Oui",
       cancellationText: "Annuler",
     });
     if (!isOk.confirmed) return;
     try {
-      await deleteSuiviJeune(id);
+      await deleteArticle(id);
+      if (id === selected?.id) {
+        setRowSelection({});
+      }
       refreshList();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : undefined;
-      toast.error(message ?? "Impossible de supprimer le suivi");
+      toast.error(message ?? "Impossible de supprimer l'article");
     }
   };
+
+  useEffect(() => {
+    const selectedIds = Object.keys(rowSelection).map((key) => Number(key));
+    if (selectedIds.length === 0) {
+      setSelected(null);
+      return;
+    }
+    const selectedId = selectedIds[0];
+    const found = articleList.find((item) => item.id === selectedId);
+    if (!found) {
+      setSelected(null);
+      return;
+    }
+    setSelected(found);
+  }, [rowSelection, articleList, setSelected]);
 
   return (
     <MaterialTable
       columns={Columns({ control, errors })}
       getRowId={(originalRow) => originalRow.id}
-      data={suiviJeuneList}
-      title="Suivi du jeune"
+      data={articleList}
+      title="Liste des articles"
+      enableRowSelection
+      enableBatchRowSelection
+      onRowSelectionChange={(updater) => {
+        if (typeof updater !== "function") return;
+        const newSelection = updater(rowSelection);
+        const lastSelectedIds = Object.keys(rowSelection);
+        const selectedIds = Object.keys(newSelection).filter(
+          (id) => !lastSelectedIds.includes(id)
+        );
+        if (selectedIds.length > 0) {
+          const newSelectedId = selectedIds[selectedIds.length - 1];
+          setRowSelection({ [newSelectedId]: true });
+        } else {
+          setRowSelection({});
+        }
+      }}
       state={{
         isLoading: loading,
-        columnPinning: { left: ["date"] },
+        rowSelection,
+        columnPinning: { left: ["mrt-row-select", "nom"] },
       }}
       onEditingRowSave={async ({ exitEditingMode, row }) => {
         try {
@@ -121,29 +141,20 @@ export default function ListSuiviJeune({ jeuneId }: ListSuiviJeuneProps) {
           if (!isValid) return;
           const values = getValues();
           const payload = {
-            date: new Date(values.date).toISOString(),
-            deroulement: values.deroulement,
-            id_jeune: jeuneId,
-            type_accompagnateur:
-              values.type_accompagnateur === null
-                ? "Technicien"
-                : values.type_accompagnateur,
+            nom: values.nom?.trim(),
           };
-          await updateSuiviJeune({
+          await updateArticle({
             id: row.original.id,
-            suiviJeune: payload,
+            article: payload,
           });
           refreshList();
           reset({
-            date: new Date().toISOString().substring(0, 10),
-            deroulement: "",
-            id_jeune: jeuneId,
-            type_accompagnateur: "Technicien",
+            nom: "",
           });
           exitEditingMode();
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : undefined;
-          toast.error(message ?? "Impossible de mettre à jour le suivi");
+          toast.error(message ?? "Impossible de mettre à jour l'article");
         }
       }}
       onCreatingRowSave={async ({ exitCreatingMode }) => {
@@ -152,43 +163,28 @@ export default function ListSuiviJeune({ jeuneId }: ListSuiviJeuneProps) {
           if (!isValid) return;
           const values = getValues();
           const payload = {
-            date: new Date(values.date).toISOString(),
-            deroulement: values.deroulement,
-            id_jeune: jeuneId,
-            type_accompagnateur:
-              values.type_accompagnateur === null
-                ? null
-                : values.type_accompagnateur,
+            nom: values.nom?.trim(),
           };
-          await createSuiviJeune(payload);
+          await createArticle(payload);
           refreshList();
           reset({
-            date: new Date().toISOString().substring(0, 10),
-            deroulement: "",
-            id_jeune: jeuneId,
-            type_accompagnateur: "Technicien",
+            nom: "",
           });
           exitCreatingMode();
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : undefined;
-          toast.error(message ?? "Impossible de créer le suivi");
+          toast.error(message ?? "Impossible de créer l'article");
         }
       }}
       onCreatingRowCancel={({ table }) => {
         reset({
-          date: new Date().toISOString().substring(0, 10),
-          deroulement: "",
-          id_jeune: jeuneId,
-          type_accompagnateur: "Technicien",
+          nom: "",
         });
         table.setCreatingRow(null);
       }}
       onEditingRowCancel={({ table }) => {
         reset({
-          date: new Date().toISOString().substring(0, 10),
-          deroulement: "",
-          id_jeune: jeuneId,
-          type_accompagnateur: "Technicien",
+          nom: "",
         });
         table.setEditingRow(null);
       }}
@@ -199,10 +195,7 @@ export default function ListSuiviJeune({ jeuneId }: ListSuiviJeuneProps) {
               color="warning"
               onClick={() => {
                 reset({
-                  date: row.original.date,
-                  deroulement: row.original.deroulement,
-                  id_jeune: jeuneId,
-                  type_accompagnateur: row.original.type_accompagnateur ?? null,
+                  nom: row.original.nom,
                 });
                 table.setEditingRow(row);
               }}
