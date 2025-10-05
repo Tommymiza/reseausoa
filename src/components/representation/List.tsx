@@ -1,7 +1,7 @@
 "use client";
 import { canActivate } from "@/lib/canActivate";
-import accompagnementStore from "@/store/accompagnement";
-import { AccompagnementItem } from "@/store/accompagnement/type";
+import representationStore from "@/store/representation";
+import { RepresentationItem } from "@/store/representation/type";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { DeleteRounded, EditRounded } from "@mui/icons-material";
 import { IconButton, Stack, styled } from "@mui/material";
@@ -15,39 +15,23 @@ import * as Yup from "yup";
 import MaterialTable from "../table/MaterialTable";
 import Columns from "./table/columns";
 
-const accompagnementSchema = Yup.object({
+const representationSchema = Yup.object({
   date: Yup.string().required("Date requise"),
   duree: Yup.number().nullable().min(0, "Durée invalide"),
   theme: Yup.string().required("Thème requis"),
-  existant: Yup.string().nullable(),
   problematique: Yup.string().nullable(),
-  solution: Yup.string().nullable(),
-  remarque: Yup.string().nullable(),
-  activite_de_masse: Yup.boolean(),
-  nb_hommes: Yup.number().nullable().min(0, "Nombre invalide"),
-  nb_femmes: Yup.number().nullable().min(0, "Nombre invalide"),
-  nb_jeunes: Yup.number().nullable().min(0, "Nombre invalide"),
-  type: Yup.string()
-    .oneOf(
-      [
-        "ACCOMPAGNEMENT_SUIVI",
-        "VISITE_ECHANGE",
-        "FORMATION",
-        "ANIMATION_SENSIBILISATION",
-      ],
-      "Type invalide"
-    )
-    .required("Type requis"),
-  id_category_theme: Yup.number().required("Catégorie requise"),
+  positionnement: Yup.string().nullable(),
+  resultat: Yup.string().nullable(),
+  suite_a_donner: Yup.string().nullable(),
   id_opr: Yup.number().required("OPR requis"),
 });
 
-export default function ListAccompagnement({
+export default function ListRepresentation({
   setSelected,
   selected,
 }: {
-  setSelected: (item: AccompagnementItem | null) => void;
-  selected: AccompagnementItem | null;
+  setSelected: (item: RepresentationItem | null) => void;
+  selected: RepresentationItem | null;
 }) {
   const searchParams = useSearchParams();
   const filterOpr = searchParams.get("id_opr");
@@ -59,14 +43,14 @@ export default function ListAccompagnement({
   }, [filterOpr]);
 
   const {
-    accompagnementList,
-    getAccompagnements,
-    updateAccompagnement,
-    deleteAccompagnement,
-    createAccompagnement,
+    representationList,
+    getRepresentations,
+    updateRepresentation,
+    deleteRepresentation,
+    createRepresentation,
     clearList,
     loading,
-  } = accompagnementStore();
+  } = representationStore();
 
   const {
     control,
@@ -75,26 +59,32 @@ export default function ListAccompagnement({
     reset,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(accompagnementSchema),
+    resolver: yupResolver(representationSchema),
     mode: "onChange",
     defaultValues: {
       date: new Date().toISOString().substring(0, 10),
       duree: 0,
       theme: "",
-      existant: "",
       problematique: "",
-      solution: "",
-      remarque: "",
-      activite_de_masse: false,
-      nb_hommes: null,
-      nb_femmes: null,
-      nb_jeunes: null,
-      type: "ACCOMPAGNEMENT_SUIVI",
-      id_category_theme: 0,
+      positionnement: "",
+      resultat: "",
+      suite_a_donner: "",
       id_opr: filterOprId ?? 0,
     },
   });
-  useEffect(() => {}, []);
+
+  useEffect(() => {
+    reset({
+      date: new Date().toISOString().substring(0, 10),
+      duree: 0,
+      theme: "",
+      problematique: "",
+      positionnement: "",
+      resultat: "",
+      suite_a_donner: "",
+      id_opr: filterOprId ?? 0,
+    });
+  }, [filterOprId, reset]);
 
   const confirm = useConfirm();
 
@@ -106,8 +96,7 @@ export default function ListAccompagnement({
 
     const args: Record<string, unknown> = {
       include: {
-        CategoryThemeAccompagnement: true,
-        AccompagnementProd: {
+        RepresentationProd: {
           include: {
             Producteur: true,
           },
@@ -119,11 +108,11 @@ export default function ListAccompagnement({
       where: { id_opr: filterOprId },
     };
 
-    getAccompagnements(args).catch((error: unknown) => {
+    getRepresentations(args).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : undefined;
-      toast.error(message ?? "Impossible de récupérer les accompagnements");
+      toast.error(message ?? "Impossible de récupérer les représentations");
     });
-  }, [filterOprId, getAccompagnements]);
+  }, [filterOprId, getRepresentations]);
 
   useEffect(() => {
     if (filterOprId === undefined) {
@@ -139,20 +128,20 @@ export default function ListAccompagnement({
   const handleDelete = async (id: number) => {
     const isOk = await confirm({
       title: "Supprimer",
-      description: "Voulez-vous vraiment supprimer cet accompagnement ?",
+      description: "Voulez-vous vraiment supprimer cette représentation ?",
       confirmationText: "Oui",
       cancellationText: "Annuler",
     });
     if (!isOk.confirmed) return;
     try {
-      await deleteAccompagnement(id);
+      await deleteRepresentation(id);
       if (id === selected?.id) {
         setRowSelection({});
       }
       refreshList();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : undefined;
-      toast.error(message ?? "Impossible de supprimer l'accompagnement");
+      toast.error(message ?? "Impossible de supprimer la représentation");
     }
   };
 
@@ -163,7 +152,7 @@ export default function ListAccompagnement({
       return;
     }
     const selectedId = selectedIds[0];
-    const selected = accompagnementList.find((item) => item.id === selectedId);
+    const selected = representationList.find((item) => item.id === selectedId);
     if (!selected) {
       setSelected(null);
       return;
@@ -175,8 +164,8 @@ export default function ListAccompagnement({
     <MaterialTable
       columns={Columns({ control, errors })}
       getRowId={(originalRow) => originalRow.id}
-      data={accompagnementList}
-      title="Liste accompagnements"
+      data={representationList}
+      title="Liste représentations"
       enableRowSelection={true}
       enableBatchRowSelection={true}
       createDisplayMode={"row"}
@@ -185,7 +174,7 @@ export default function ListAccompagnement({
       renderTopToolbarCustomActions={({ table }) =>
         filterOprId === undefined ? (
           <Stack sx={{ p: 2, bgcolor: "warning.light", borderRadius: 1 }}>
-            Veuillez sélectionner un OPR pour créer un accompagnement
+            Veuillez sélectionner un OPR pour créer une représentation
           </Stack>
         ) : null
       }
@@ -206,7 +195,7 @@ export default function ListAccompagnement({
       state={{
         isLoading: loading,
         rowSelection,
-        columnPinning: { left: ["mrt-row-select", "date", "type"] },
+        columnPinning: { left: ["mrt-row-select", "date", "theme"] },
       }}
       onEditingRowSave={async ({ exitEditingMode, row }) => {
         try {
@@ -217,18 +206,11 @@ export default function ListAccompagnement({
             ...values,
             date: new Date(values.date).toISOString(),
             duree: values.duree === null ? null : Number(values.duree),
-            nb_hommes:
-              values.nb_hommes === null ? null : Number(values.nb_hommes),
-            nb_femmes:
-              values.nb_femmes === null ? null : Number(values.nb_femmes),
-            nb_jeunes:
-              values.nb_jeunes === null ? null : Number(values.nb_jeunes),
             id_opr: Number(values.id_opr),
-            id_category_theme: Number(values.id_category_theme),
           };
-          await updateAccompagnement({
+          await updateRepresentation({
             id: row.original.id,
-            accompagnement: payload,
+            representation: payload,
           });
           refreshList();
           reset();
@@ -236,7 +218,7 @@ export default function ListAccompagnement({
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : undefined;
           toast.error(
-            message ?? "Impossible de mettre à jour l'accompagnement"
+            message ?? "Impossible de mettre à jour la représentation"
           );
         }
       }}
@@ -249,22 +231,15 @@ export default function ListAccompagnement({
             ...values,
             date: new Date(values.date).toISOString(),
             duree: values.duree === null ? null : Number(values.duree),
-            nb_hommes:
-              values.nb_hommes === null ? null : Number(values.nb_hommes),
-            nb_femmes:
-              values.nb_femmes === null ? null : Number(values.nb_femmes),
-            nb_jeunes:
-              values.nb_jeunes === null ? null : Number(values.nb_jeunes),
             id_opr: Number(values.id_opr),
-            id_category_theme: Number(values.id_category_theme),
           };
-          await createAccompagnement(payload);
+          await createRepresentation(payload);
           refreshList();
           reset();
           exitCreatingMode();
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : undefined;
-          toast.error(message ?? "Impossible de créer l'accompagnement");
+          toast.error(message ?? "Impossible de créer la représentation");
         }
       }}
       onCreatingRowCancel={({ table }) => {
@@ -272,16 +247,10 @@ export default function ListAccompagnement({
           date: new Date().toISOString().substring(0, 10),
           duree: 0,
           theme: "",
-          existant: "",
           problematique: "",
-          solution: "",
-          remarque: "",
-          activite_de_masse: false,
-          nb_hommes: null,
-          nb_femmes: null,
-          nb_jeunes: null,
-          type: "ACCOMPAGNEMENT_SUIVI",
-          id_category_theme: 0,
+          positionnement: "",
+          resultat: "",
+          suite_a_donner: "",
           id_opr: filterOprId ?? 0,
         });
         table.setCreatingRow(null);
@@ -291,16 +260,10 @@ export default function ListAccompagnement({
           date: new Date().toISOString().substring(0, 10),
           duree: 0,
           theme: "",
-          existant: "",
           problematique: "",
-          solution: "",
-          remarque: "",
-          activite_de_masse: false,
-          nb_hommes: null,
-          nb_femmes: null,
-          nb_jeunes: null,
-          type: "ACCOMPAGNEMENT_SUIVI",
-          id_category_theme: 0,
+          positionnement: "",
+          resultat: "",
+          suite_a_donner: "",
           id_opr: filterOprId ?? 0,
         });
         table.setEditingRow(null);
@@ -315,16 +278,10 @@ export default function ListAccompagnement({
                   date: row.original.date,
                   duree: row.original.duree,
                   theme: row.original.theme,
-                  existant: row.original.existant ?? "",
                   problematique: row.original.problematique ?? "",
-                  solution: row.original.solution ?? "",
-                  remarque: row.original.remarque ?? "",
-                  activite_de_masse: row.original.activite_de_masse ?? false,
-                  nb_hommes: row.original.nb_hommes,
-                  nb_femmes: row.original.nb_femmes,
-                  nb_jeunes: row.original.nb_jeunes,
-                  type: row.original.type,
-                  id_category_theme: row.original.id_category_theme,
+                  positionnement: row.original.positionnement ?? "",
+                  resultat: row.original.resultat ?? "",
+                  suite_a_donner: row.original.suite_a_donner ?? "",
                   id_opr: row.original.id_opr,
                 });
                 table.setEditingRow(row);
