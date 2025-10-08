@@ -6,10 +6,11 @@ import gvecStore from "@/store/gvec";
 import { GVECItem } from "@/store/gvec/type";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { DeleteRounded, EditRounded } from "@mui/icons-material";
-import { IconButton, Stack, styled } from "@mui/material";
+import { IconButton, Stack, styled, Typography } from "@mui/material";
 import { MRT_RowSelectionState } from "material-react-table";
 import { useConfirm } from "material-ui-confirm";
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as Yup from "yup";
@@ -32,7 +33,14 @@ export default function ListGVEC({
   setSelected: (item: GVECItem | null) => void;
   selected: GVECItem | null;
 }) {
+  const searchParams = useSearchParams();
+  const filterOpr = searchParams.get("id_opr");
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
+  const filterOprId = useMemo(() => {
+    if (!filterOpr) return undefined;
+    const parsed = Number(filterOpr);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  }, [filterOpr]);
 
   const {
     gvecList,
@@ -63,6 +71,12 @@ export default function ListGVEC({
   const confirm = useConfirm();
 
   const refreshList = useCallback(() => {
+    if (filterOprId === undefined) {
+      clearList();
+      setRowSelection({});
+      return;
+    }
+
     getGVECs({
       include: {
         Localisation: true,
@@ -70,11 +84,14 @@ export default function ListGVEC({
       orderBy: {
         date: "desc",
       },
+      where: {
+        id_opr: filterOprId,
+      },
     }).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : undefined;
       toast.error(message ?? "Impossible de récupérer les GVEC");
     });
-  }, [getGVECs]);
+  }, [clearList, filterOprId, getGVECs]);
 
   useEffect(() => {
     refreshList();
@@ -118,12 +135,31 @@ export default function ListGVEC({
     setSelected(found);
   }, [rowSelection, gvecList, setSelected]);
 
+  if (filterOprId === undefined) {
+    return (
+      <MaterialTable
+        columns={Columns({ control, errors })}
+        getRowId={(originalRow) => originalRow.id}
+        data={[]}
+        title="GVEC"
+        state={{ isLoading: false }}
+        renderEmptyRowsFallback={() => (
+          <Stack p={4} alignItems="center">
+            <Typography variant="h6" color="text.secondary">
+              Veuillez sélectionner une OPR pour voir et gérer les GVEC
+            </Typography>
+          </Stack>
+        )}
+      />
+    );
+  }
+
   return (
     <MaterialTable
       columns={Columns({ control, errors })}
       getRowId={(originalRow) => originalRow.id}
       data={gvecList}
-      title="Liste des GVEC"
+      title="GVEC"
       enableRowSelection
       enableBatchRowSelection
       onRowSelectionChange={(updater) => {
@@ -176,10 +212,15 @@ export default function ListGVEC({
           const isValid = await trigger();
           if (!isValid) return;
           const values = getValues();
+          if (filterOprId === undefined) {
+            toast.error("Veuillez sélectionner une OPR");
+            return;
+          }
           const payload = {
             nom: values.nom?.trim(),
             date: new Date(values.date).toISOString(),
             id_localisation: Number(values.id_localisation),
+            id_opr: filterOprId,
           };
           await createGVEC(payload);
           refreshList();

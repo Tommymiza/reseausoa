@@ -143,7 +143,7 @@ export default function ListRepresentationProd({
       })}
       getRowId={(originalRow) => originalRow.id}
       data={representationProdList}
-      title="Liste représentants"
+      title="Représentants"
       state={{
         isLoading: loading,
         columnPinning: { left: ["mrt-row-select", "id_producteur"] },

@@ -111,7 +111,7 @@ export default function ListUser() {
       <MaterialTable
         columns={Columns({ control, errors })}
         data={utilisateurList}
-        title="Liste utilisateur"
+        title="Utilisateur"
         state={{
           isLoading: loading,
           columnPinning: { left: ["nom", "prenom"] },

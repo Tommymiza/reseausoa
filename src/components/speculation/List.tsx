@@ -11,9 +11,9 @@ import {
 import { yupResolver } from "@hookform/resolvers/yup";
 import { DeleteRounded, EditRounded } from "@mui/icons-material";
 import { IconButton, Stack, styled } from "@mui/material";
+import { useConfirm } from "material-ui-confirm";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useConfirm } from "material-ui-confirm";
 import { toast } from "sonner";
 import * as Yup from "yup";
 
@@ -94,7 +94,7 @@ export default function ListSpeculation() {
 
   return (
     <MaterialTable
-      title="Liste des spéculations"
+      title="Spéculations"
       columns={Columns({ control, errors })}
       data={speculationList}
       state={{
@@ -131,7 +131,10 @@ export default function ListSpeculation() {
             nom: values.nom?.trim() ?? "",
             type: values.type,
           };
-          await updateSpeculation({ id: row.original.id, speculation: payload });
+          await updateSpeculation({
+            id: row.original.id,
+            speculation: payload,
+          });
           refreshList();
           reset(DEFAULT_VALUES);
           exitEditingMode();

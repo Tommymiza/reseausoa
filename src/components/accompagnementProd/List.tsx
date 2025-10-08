@@ -169,7 +169,7 @@ export default function ListAccompagnementProd({
       })}
       getRowId={(originalRow) => originalRow.id}
       data={accompagnementProdList}
-      title="Liste producteurs"
+      title="Producteurs"
       state={{
         isLoading: loading,
         columnPinning: { left: ["mrt-row-select", "id_producteur"] },

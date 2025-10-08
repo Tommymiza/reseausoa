@@ -176,7 +176,7 @@ export default function ListAccompagnement({
       columns={Columns({ control, errors })}
       getRowId={(originalRow) => originalRow.id}
       data={accompagnementList}
-      title="Liste accompagnements"
+      title="Accompagnements"
       enableRowSelection={true}
       enableBatchRowSelection={true}
       createDisplayMode={"row"}

@@ -247,7 +247,7 @@ export default function ListOpr() {
       <MaterialTable
         columns={Columns({ control, errors })}
         data={producteurList}
-        title="Liste membres"
+        title="Membres"
         state={{
           isLoading: loading,
           columnPinning: { left: ["nom", "prenom"] },

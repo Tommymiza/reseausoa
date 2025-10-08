@@ -165,7 +165,7 @@ export default function ListRepresentation({
       columns={Columns({ control, errors })}
       getRowId={(originalRow) => originalRow.id}
       data={representationList}
-      title="Liste représentations"
+      title="Représentations"
       enableRowSelection={true}
       enableBatchRowSelection={true}
       createDisplayMode={"row"}

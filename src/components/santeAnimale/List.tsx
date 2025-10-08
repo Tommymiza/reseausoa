@@ -171,7 +171,7 @@ export default function ListSanteAnimale() {
       columns={Columns({ control, errors })}
       getRowId={(originalRow) => originalRow.id}
       data={santeAnimaleList}
-      title="Liste santé animale"
+      title="Santé animale"
       createDisplayMode={"row"}
       enableRowActions={filterOprId !== undefined}
       positionToolbarAlertBanner="bottom"

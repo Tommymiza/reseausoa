@@ -138,7 +138,7 @@ export default function ListCommercialisation({
         columns={Columns({ control, errors, showOprColumn: false })}
         getRowId={(originalRow) => originalRow.id}
         data={[]}
-        title="Liste des commercialisations"
+        title="Commercialisations"
         state={{ isLoading: false }}
         renderEmptyRowsFallback={() => (
           <Stack p={4} alignItems="center">
@@ -157,7 +157,7 @@ export default function ListCommercialisation({
       columns={Columns({ control, errors, showOprColumn: false })}
       getRowId={(originalRow) => originalRow.id}
       data={commercialisationList}
-      title="Liste des commercialisations"
+      title="Commercialisations"
       enableRowSelection
       enableBatchRowSelection
       enableRowActions={filterOprId !== undefined}

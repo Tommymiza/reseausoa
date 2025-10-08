@@ -138,7 +138,7 @@ export default function ListAchat({
         columns={Columns({ control, errors, showOprColumn: false })}
         getRowId={(originalRow) => originalRow.id}
         data={[]}
-        title="Liste des achats"
+        title="Achats groupés"
         state={{ isLoading: false }}
         renderEmptyRowsFallback={() => (
           <Stack p={4} alignItems="center">
@@ -156,7 +156,7 @@ export default function ListAchat({
       columns={Columns({ control, errors, showOprColumn: false })}
       getRowId={(originalRow) => originalRow.id}
       data={achatList}
-      title="Liste des achats"
+      title="Achats"
       enableRowSelection
       enableBatchRowSelection
       enableRowActions={filterOprId !== undefined}

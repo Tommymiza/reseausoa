@@ -209,7 +209,7 @@ export default function ListJeune({
       columns={Columns({ control, errors })}
       getRowId={(originalRow) => originalRow.id}
       data={jeuneList}
-      title="Liste jeunes"
+      title="Jeunes installés"
       enableRowSelection
       enableBatchRowSelection
       onRowSelectionChange={(updater) => {

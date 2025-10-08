@@ -4,6 +4,7 @@ export type GVECItem = {
   id: number;
   nom: string;
   date: string;
+  id_opr: number;
   id_localisation: number;
   Localisation?: LocalisationItem | null;
   created_at?: string | null;

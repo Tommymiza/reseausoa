@@ -113,7 +113,7 @@ export default function ListArticle({
       columns={Columns({ control, errors })}
       getRowId={(originalRow) => originalRow.id}
       data={articleList}
-      title="Liste des articles"
+      title="Articles"
       enableRowSelection
       enableBatchRowSelection
       onRowSelectionChange={(updater) => {
